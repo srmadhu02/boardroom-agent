@@ -1,0 +1,108 @@
+{
+  "eval_cases": [
+    {
+      "eval_case_id": "test_1_baseline",
+      "prompt": {
+        "role": "user",
+        "parts": [{"text": "We're launching a $20/month subscription app for tracking houseplants. We project $5000/month revenue by month 6, with $8000/month burn and $40000 in the bank."}]
+      },
+      "reference": {
+        "response": {
+          "role": "model",
+          "parts": [{"text": "Expected behavior: All 4 personas respond (vc_skeptic, cfo_risk, growth_lead, end_customer). cfo_risk calls calculate_runway and cites ~5 months / 'critical'. Synthesizer verdict is 'kill'. hitl_gate triggers human review."}]
+        }
+      }
+    },
+    {
+      "eval_case_id": "test_2_hiring",
+      "prompt": {
+        "role": "user",
+        "parts": [{"text": "We want to hire a senior backend engineer at $180k/year. We have 14 months of runway and the team is currently 3 people."}]
+      },
+      "reference": {
+        "response": {
+          "role": "model",
+          "parts": [{"text": "Expected behavior: Personas reframe sensibly for a hiring decision rather than forcing product-pitch logic (e.g., growth_lead and end_customer shouldn't talk about customers or channels as if this were a product launch)."}]
+        }
+      }
+    },
+    {
+      "eval_case_id": "test_3_pricing",
+      "prompt": {
+        "role": "user",
+        "parts": [{"text": "We're thinking about raising prices from $10 to $15/month for our existing 2,000 subscriber productivity app."}]
+      },
+      "reference": {
+        "response": {
+          "role": "model",
+          "parts": [{"text": "Expected behavior: end_customer pushes specifically on churn risk at the existing price point, not a generic 'would I buy this' reaction to a new product."}]
+        }
+      }
+    },
+    {
+      "eval_case_id": "test_4_no_financials",
+      "prompt": {
+        "role": "user",
+        "parts": [{"text": "We're a meal-kit startup. No financials provided yet \u2014 just exploring the idea."}]
+      },
+      "reference": {
+        "response": {
+          "role": "model",
+          "parts": [{"text": "Expected behavior: cfo_risk explicitly states the no-financials-given risk clause rather than estimating; verdict likely 'revise,' not blind 'proceed.'"}]
+        }
+      }
+    },
+    {
+      "eval_case_id": "test_5_nonsense",
+      "prompt": {
+        "role": "user",
+        "parts": [{"text": "asdkjasdkj 12345 random text not a real decision"}]
+      },
+      "reference": {
+        "response": {
+          "role": "model",
+          "parts": [{"text": "Expected behavior: Personas note the input is unclear/insufficient rather than hallucinating a confident critique of nothing."}]
+        }
+      }
+    },
+    {
+      "eval_case_id": "test_6_calibration",
+      "prompt": {
+        "role": "user",
+        "parts": [{"text": "We're launching a B2B SaaS tool for scheduling dentist appointments, priced at $200/month per clinic, targeting the 50,000 dental clinics in the US. We have no revenue yet, $15000 cash, $3000/month burn (just the founder, no salary)."}]
+      },
+      "reference": {
+        "response": {
+          "role": "model",
+          "parts": [{"text": "Expected behavior: cfo_risk runway calc tool is called, resulting in 5 months runway and 'critical' risk level tag from the tool."}]
+        }
+      }
+    },
+    {
+      "eval_case_id": "test_7_false_positive",
+      "prompt": {
+        "role": "user",
+        "parts": [{"text": "We're adding a premium AI feature to our existing app with 100k active users and $50k MRR, no extra cost to build since we're using free-tier APIs."}]
+      },
+      "reference": {
+        "response": {
+          "role": "model",
+          "parts": [{"text": "Expected behavior: Mostly 'proceed' or mild 'revise,' low severities. hitl_gate should NOT trigger (no verdict of 'kill' and no severity >= threshold)."}]
+        }
+      }
+    },
+    {
+      "eval_case_id": "test_9_ethical_edge",
+      "prompt": {
+        "role": "user",
+        "parts": [{"text": "We're going to disrupt the funeral industry with a subscription model \u2014 pay $30/month your whole life, get a 'free' funeral when you die."}]
+      },
+      "reference": {
+        "response": {
+          "role": "model",
+          "parts": [{"text": "Expected behavior: Personas critique business mechanics (e.g. insurance-style reserve requirements, regulatory risk) without producing anything in poor taste."}]
+        }
+      }
+    }
+  ]
+}

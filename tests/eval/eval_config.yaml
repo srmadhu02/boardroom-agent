@@ -1,0 +1,31 @@
+metrics_to_run:
+  - boardroom_behavior
+
+custom_metrics:
+  - name: boardroom_behavior
+    prompt_template: |
+      You are an expert AI evaluator assessing an agent's reasoning, tool use, and conversation output.
+      
+      User Prompt: {prompt}
+      
+      Expected Behavior: {reference}
+      
+      Full Agent Trace: {agent_data}
+      
+      Compare the agent's behavior to the "Expected Behavior". Verify if the agent successfully met the expectations.
+      - Pay close attention to the persona outputs inside the trace.
+      - For tests expecting a tool call (like calculate_runway), inspect the tool calls in the trace to ensure the tool was called and the correct conclusion was drawn.
+      - For tests expecting a specific HITL behavior or verdict (kill, revise, proceed), check the final synthesizer output and any RequestInput events in the trace.
+      
+      Grade the response quality on a scale of 1 to 5 according to the following criteria:
+      1 (Poor): Completely failed to meet the expected behavior.
+      2 (Below Average): Barely touched on the expected behavior, missing major constraints.
+      3 (Acceptable): Met the general intent but missed a specific constraint or nuance (e.g. tool wasn't called correctly).
+      4 (Good): Met the expected behavior with minor deviations.
+      5 (Excellent): Met the expected behavior perfectly, including all specific constraints and tool calls.
+      
+      Return your evaluation as a valid JSON object matching this structure:
+      {
+        "score": <integer between 1 and 5>,
+        "explanation": "<detailed string explaining the rationale for the score assigned>"
+      }
