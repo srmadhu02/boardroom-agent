@@ -703,7 +703,7 @@ if st.session_state.security_blocked:
 
 has_any_response = any(v is not None for v in st.session_state.persona_responses.values())
 
-if has_any_response or st.session_state.run_complete or st.session_state.hitl_interrupt_id:
+if (has_any_response or st.session_state.run_complete or st.session_state.hitl_interrupt_id) and not st.session_state.security_blocked:
     st.markdown("<div style='height: 1.5rem;'></div>", unsafe_allow_html=True)
 
     cols = st.columns(4)
