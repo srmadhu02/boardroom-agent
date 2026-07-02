@@ -10,6 +10,7 @@ Run with:
 """
 
 import json
+import textwrap
 import time
 from typing import Any
 
@@ -36,7 +37,7 @@ st.set_page_config(
     layout="wide",
 )
 
-st.markdown("""
+st.markdown(textwrap.dedent("""
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
 
@@ -124,6 +125,19 @@ footer {visibility: hidden;}
     line-height: 1.65;
 }
 
+.persona-card.customer .persona-text h2 { color: #60a5fa; font-size: 0.95rem; font-weight: 700; margin: 0 0 0.75rem 0; line-height: 1.4; letter-spacing: -0.01em; }
+.persona-card.growth .persona-text h2 { color: #34d399; font-size: 0.95rem; font-weight: 700; margin: 0 0 0.75rem 0; line-height: 1.4; letter-spacing: -0.01em; }
+.persona-card.vc .persona-text h2 { color: #a78bfa; font-size: 0.95rem; font-weight: 700; margin: 0 0 0.75rem 0; line-height: 1.4; letter-spacing: -0.01em; }
+.persona-card.cfo .persona-text h2 { color: #fbbf24; font-size: 0.95rem; font-weight: 700; margin: 0 0 0.75rem 0; line-height: 1.4; letter-spacing: -0.01em; }
+
+/* Distinct styling for closing questions/paragraphs that appear after the bullet list */
+.persona-text > ul + p {
+    margin-top: 1.2rem;
+    font-size: 0.85rem;
+    font-style: italic;
+    opacity: 0.9;
+}
+
 /* Verdict badge */
 .verdict-badge {
     display: inline-flex;
@@ -159,6 +173,21 @@ footer {visibility: hidden;}
     border-radius: 16px;
     padding: 1.5rem;
     margin-top: 1rem;
+}
+.hitl-panel-content {
+    color: #94a3b8;
+    font-size: 0.88rem;
+    line-height: 1.6;
+}
+.hitl-panel-content p {
+    margin-bottom: 0.75rem;
+}
+.hitl-panel-content ul {
+    margin-top: 0.1rem;
+    margin-bottom: 0;
+}
+.hitl-panel-content li {
+    margin-bottom: 0.4rem;
 }
 
 /* Concern row */
@@ -206,8 +235,6 @@ footer {visibility: hidden;}
 
 /* Button styling */
 div.stButton > button {
-    background: linear-gradient(135deg, #8b5cf6, #6d28d9) !important;
-    color: white !important;
     border: none !important;
     border-radius: 12px !important;
     padding: 0.6rem 2rem !important;
@@ -216,9 +243,19 @@ div.stButton > button {
     letter-spacing: -0.01em !important;
     transition: all 0.2s ease !important;
 }
-div.stButton > button:hover {
+div.stButton > button:not(:disabled) {
+    background: linear-gradient(135deg, #8b5cf6, #6d28d9) !important;
+    color: white !important;
+}
+div.stButton > button:not(:disabled):hover {
     transform: translateY(-1px) !important;
     box-shadow: 0 4px 16px rgba(139,92,246,0.4) !important;
+}
+div.stButton > button:disabled {
+    background: #1e293b !important;
+    color: #64748b !important;
+    cursor: not-allowed !important;
+    opacity: 0.7 !important;
 }
 
 /* Security warning */
@@ -231,7 +268,7 @@ div.stButton > button:hover {
     font-weight: 500;
 }
 </style>
-""", unsafe_allow_html=True)
+"""), unsafe_allow_html=True)
 
 
 # ---------------------------------------------------------------------------
@@ -252,6 +289,13 @@ DECISION_PREFIXES = {
     "Other":   "",
 }
 
+DECISION_PLACEHOLDERS = {
+    "Pitch":   "e.g. We're launching a B2B SaaS tool that uses AI to automate expense reports for mid-market companies…",
+    "Hiring":  "e.g. We want to hire a senior backend engineer at $180k/year, currently a team of 3 with 14 months of runway…",
+    "Pricing": "e.g. We're raising prices from $10 to $15/month for our existing 2,000 subscribers…",
+    "Other":   "e.g. Describe the business decision you want pressure-tested…",
+}
+
 APP_NAME = "boardroom_streamlit"
 
 
@@ -270,9 +314,11 @@ def _init_state():
         "hitl_message": None,
         "hitl_resolved": False,
         "run_complete": False,
+        "run_in_progress": False,
         "security_blocked": False,
         "security_message": "",
         "invocation_id": None,
+        "current_round": 1,
     }
     for k, v in defaults.items():
         if k not in st.session_state:
@@ -297,7 +343,10 @@ def _get_runner() -> Runner:
 
 
 def _get_or_create_session(runner: Runner) -> str:
-    """Create a fresh session for each run."""
+    """Create a fresh session for each run, unless we are in a continuing round."""
+    if st.session_state.session_id and st.session_state.current_round > 1:
+        return st.session_state.session_id
+
     session = st.session_state.session_service.create_session_sync(
         user_id="streamlit_user",
         app_name=APP_NAME,
@@ -437,6 +486,9 @@ def _resume_hitl(decision: str):
     st.session_state.hitl_resolved = True
     st.session_state.hitl_interrupt_id = None
     st.session_state.run_complete = True
+    
+    if decision == "reject":
+        st.session_state.current_round += 1
 
 
 # ---------------------------------------------------------------------------
@@ -448,12 +500,15 @@ def _render_persona_card(key: str, placeholder_slots: dict):
     meta = PERSONA_META[key]
     response = st.session_state.persona_responses.get(key)
 
+    import markdown as md
+    import re
     if response:
-        body_html = f'<div class="persona-text">{response}</div>'
+        body_content = md.markdown(response)
+        body_html = f'<div class="persona-text">{body_content}</div>'
     else:
         body_html = '<div class="placeholder-text">Awaiting analysis…</div>'
 
-    st.markdown(f"""
+    st.markdown(textwrap.dedent(f"""
     <div class="persona-card {meta['css']}">
         <div class="persona-header">
             <span class="persona-emoji">{meta['emoji']}</span>
@@ -461,7 +516,7 @@ def _render_persona_card(key: str, placeholder_slots: dict):
         </div>
         {body_html}
     </div>
-    """, unsafe_allow_html=True)
+    """), unsafe_allow_html=True)
 
 
 def _render_verdict_badge(verdict_dict: dict):
@@ -477,18 +532,43 @@ def _render_verdict_badge(verdict_dict: dict):
 
     icon = {"proceed": "✅", "revise": "⚠️", "kill": "🚫"}.get(verdict, "❓")
 
-    st.markdown(f"""
+    st.markdown(textwrap.dedent(f"""
     <div style="display: flex; align-items: center; gap: 1rem; margin: 1.5rem 0;">
         <div class="verdict-badge {css_class}">{icon} {verdict.upper()}</div>
     </div>
     <div style="color: #94a3b8; font-size: 0.95rem; line-height: 1.6; margin-bottom: 1rem;">
         {summary}
     </div>
-    """, unsafe_allow_html=True)
+    """), unsafe_allow_html=True)
 
 
 def _render_concerns(verdict_dict: dict):
     """Render the ranked concerns in an expander."""
+    comparison_summary = verdict_dict.get("comparison_summary", {})
+    if comparison_summary:
+        with st.expander("🔄 Round 2 Comparison Summary", expanded=True):
+            resolved = comparison_summary.get("resolved", [])
+            partially_resolved = comparison_summary.get("partially_resolved", [])
+            unresolved = comparison_summary.get("unresolved", [])
+            new_concerns = comparison_summary.get("new_concerns", [])
+            
+            if resolved:
+                st.markdown("**✅ Resolved:**")
+                for item in resolved:
+                    st.markdown(f"- {item}")
+            if partially_resolved:
+                st.markdown("**⚠️ Partially Resolved:**")
+                for item in partially_resolved:
+                    st.markdown(f"- {item}")
+            if unresolved:
+                st.markdown("**❌ Unresolved:**")
+                for item in unresolved:
+                    st.markdown(f"- {item}")
+            if new_concerns:
+                st.markdown("**🆕 New Concerns:**")
+                for item in new_concerns:
+                    st.markdown(f"- {item}")
+
     concerns = verdict_dict.get("top_concerns", [])
     if not concerns:
         return
@@ -501,7 +581,7 @@ def _render_concerns(verdict_dict: dict):
             concern_text = c.get("concern", "")
             fix = c.get("suggested_fix", "—")
 
-            st.markdown(f"""
+            st.markdown(textwrap.dedent(f"""
             <div class="concern-row">
                 <div style="display: flex; align-items: flex-start; gap: 0.8rem;">
                     <div class="severity-badge {sev_class}">{sev}</div>
@@ -518,7 +598,7 @@ def _render_concerns(verdict_dict: dict):
                     </div>
                 </div>
             </div>
-            """, unsafe_allow_html=True)
+            """), unsafe_allow_html=True)
 
 
 # ---------------------------------------------------------------------------
@@ -526,20 +606,28 @@ def _render_concerns(verdict_dict: dict):
 # ---------------------------------------------------------------------------
 
 # Title
-st.markdown("""
-<div style="text-align: center; padding: 0 0 1rem;">
-    <div style="font-size: 2.5rem; margin-bottom: 0.3rem;">🏛️</div>
-    <h1 style="font-family: 'Inter', sans-serif; font-weight: 800; font-size: 2rem;
-               background: linear-gradient(135deg, #a78bfa, #60a5fa);
-               -webkit-background-clip: text; -webkit-text-fill-color: transparent;
-               margin: 0; letter-spacing: -0.03em;">
-        The Boardroom
-    </h1>
-    <p style="color: #64748b; font-size: 0.95rem; margin-top: 0.4rem;">
-        AI-powered decision pressure-testing with four adversarial personas
-    </p>
-</div>
-""", unsafe_allow_html=True)
+round_badge = ""
+if st.session_state.current_round > 1:
+    round_badge = f'<div style="display: inline-block; background: #8b5cf6; color: white; padding: 0.2rem 0.6rem; border-radius: 12px; font-size: 0.9rem; font-weight: 700; margin-bottom: 0.5rem; letter-spacing: 0.05em; text-transform: uppercase;">Round {st.session_state.current_round} – Revision Review</div>'
+
+st.markdown(f"""<div style="text-align: center; padding: 0 0 1rem;">
+<div style="font-size: 2.5rem; margin-bottom: 0.3rem;">🏛️</div>
+{round_badge}
+<h1 style="font-family: 'Inter', sans-serif; font-weight: 800; font-size: 2rem;
+background: linear-gradient(135deg, #a78bfa, #60a5fa);
+-webkit-background-clip: text; -webkit-text-fill-color: transparent;
+margin: 0; letter-spacing: -0.03em;">
+The Boardroom
+</h1>
+<p style="color: #64748b; font-size: 0.95rem; margin-top: 0.4rem;">
+AI-powered decision pressure-testing with four adversarial personas
+</p>
+</div>""", unsafe_allow_html=True)
+
+# Inputs are disabled while a run is in progress or HITL is awaiting resolution
+_inputs_disabled = st.session_state.run_in_progress or (
+    st.session_state.hitl_interrupt_id is not None and not st.session_state.hitl_resolved
+)
 
 # Input section
 col_left, col_right = st.columns([3, 1])
@@ -550,16 +638,27 @@ with col_left:
         options=list(DECISION_PREFIXES.keys()),
         horizontal=True,
         index=0,
+        disabled=_inputs_disabled,
     )
+
+    # Clear the text area when the user switches decision type
+    if "prev_decision_type" not in st.session_state:
+        st.session_state.prev_decision_type = decision_type
+    if decision_type != st.session_state.prev_decision_type:
+        st.session_state.prev_decision_type = decision_type
+        st.session_state.user_input_text = ""
+
     user_text = st.text_area(
         "Describe your decision or pitch:",
         height=140,
-        placeholder="e.g. We're launching a B2B SaaS tool that uses AI to automate expense reports for mid-market companies…",
+        placeholder=DECISION_PLACEHOLDERS.get(decision_type, DECISION_PLACEHOLDERS["Other"]),
+        key="user_input_text",
+        disabled=_inputs_disabled,
     )
 
 with col_right:
     st.markdown("<div style='height: 2.5rem;'></div>", unsafe_allow_html=True)
-    run_clicked = st.button("🏛️  Run the Boardroom", use_container_width=True)
+    run_clicked = st.button("🏛️  Run the Boardroom", use_container_width=True, disabled=_inputs_disabled)
 
 # ---------------------------------------------------------------------------
 # Execute on button click
@@ -567,24 +666,36 @@ with col_right:
 
 if run_clicked and user_text.strip():
     prefix = DECISION_PREFIXES.get(decision_type, "")
-    full_input = prefix + user_text.strip()
-
-    with st.spinner("The boardroom is deliberating…"):
-        _run_agent(full_input)
+    st.session_state.pending_run_input = prefix + user_text.strip()
+    st.session_state.run_in_progress = True
+    st.rerun()  # Rerun immediately to send the disabled UI state to the browser
 
 elif run_clicked and not user_text.strip():
     st.warning("Please enter a decision or pitch to pressure-test.")
+
+# Execute the deferred run now that the UI is disabled
+if st.session_state.get("pending_run_input"):
+    input_to_run = st.session_state.pending_run_input
+    st.session_state.pending_run_input = None  # Clear so it only runs once
+    
+    try:
+        with st.spinner("The boardroom is deliberating…"):
+            _run_agent(input_to_run)
+    finally:
+        # Guarantee this flag resets even if a queued frontend event aborts the script
+        st.session_state.run_in_progress = False
+        st.rerun()
 
 # ---------------------------------------------------------------------------
 # Security block display
 # ---------------------------------------------------------------------------
 
 if st.session_state.security_blocked:
-    st.markdown(f"""
+    st.markdown(textwrap.dedent(f"""
     <div class="security-warning">
         🛡️ {st.session_state.security_message}
     </div>
-    """, unsafe_allow_html=True)
+    """), unsafe_allow_html=True)
 
 # ---------------------------------------------------------------------------
 # Persona cards — staggered reveal
@@ -596,7 +707,7 @@ if has_any_response or st.session_state.run_complete or st.session_state.hitl_in
     st.markdown("<div style='height: 1.5rem;'></div>", unsafe_allow_html=True)
 
     cols = st.columns(4)
-    persona_keys = list(PERSONA_META.keys())
+    persona_keys = ["end_customer", "growth_lead", "vc_skeptic", "cfo_risk"]
 
     for i, key in enumerate(persona_keys):
         with cols[i]:
@@ -620,46 +731,63 @@ if st.session_state.verdict:
 
 if st.session_state.hitl_interrupt_id and not st.session_state.hitl_resolved:
     display_msg = st.session_state.hitl_message or "This verdict requires human sign-off before finalizing."
+    
+    import markdown as md
+    
+    # Strip the inline plain-text header and CLI instructions, since the UI provides its own styled equivalents
+    display_msg = display_msg.replace("⚠️ Human review required.", "").strip()
     display_msg = display_msg.replace("Reply 'approve' (or 'accept', 'yes', 'y') to finalize this verdict, or 'reject' (or anything else) to send it back for founder revision.", "").strip()
 
-    st.markdown(f"""
-    <div class="hitl-panel">
-        <div style="display: flex; align-items: center; gap: 0.6rem; margin-bottom: 1rem;">
-            <span style="font-size: 1.5rem;">⚠️</span>
-            <span style="font-weight: 700; font-size: 1.1rem; color: #f87171;">
-                Human Review Required
-            </span>
-        </div>
-        <div style="color: #94a3b8; font-size: 0.88rem; line-height: 1.6; white-space: pre-wrap;">
-            {display_msg}
-        </div>
-    </div>
-    """, unsafe_allow_html=True)
+    # Enhance typography for the UI and force clear paragraphs
+    display_msg = display_msg.replace("Verdict:", "**Verdict:**")
+    display_msg = display_msg.replace("Summary:", "\n\n**Summary:**")
+    display_msg = display_msg.replace("Concerns:\n", "\n\n**Concerns:**\n\n")
+    
+    msg_html = md.markdown(display_msg)
+
+    st.markdown(f"""<div class="hitl-panel">
+<div style="display: flex; align-items: center; gap: 0.6rem; margin-bottom: 1rem;">
+<span style="font-size: 1.5rem;">⚠️</span>
+<span style="font-weight: 700; font-size: 1.1rem; color: #f87171;">
+Human Review Required
+</span>
+</div>
+<div class="hitl-panel-content">
+{msg_html}
+</div>
+</div>""", unsafe_allow_html=True)
 
     st.markdown("<div style='height: 0.75rem;'></div>", unsafe_allow_html=True)
 
-    # Override button color to red for reject (placed outside columns to avoid vertical misalignment)
-    st.markdown("""
+    # Override button colors for approve (green) and reject (red)
+    st.markdown(textwrap.dedent("""
     <style>
-    div[data-testid="stHorizontalBlock"] div:nth-child(2) div.stButton > button {
+    div[data-testid="stHorizontalBlock"] div:nth-child(1) div.stButton > button:not(:disabled) {
+        background: linear-gradient(135deg, #10b981, #059669) !important;
+    }
+    div[data-testid="stHorizontalBlock"] div:nth-child(1) div.stButton > button:not(:disabled):hover {
+        box-shadow: 0 4px 16px rgba(16,185,129,0.4) !important;
+    }
+    
+    div[data-testid="stHorizontalBlock"] div:nth-child(2) div.stButton > button:not(:disabled) {
         background: linear-gradient(135deg, #ef4444, #dc2626) !important;
     }
-    div[data-testid="stHorizontalBlock"] div:nth-child(2) div.stButton > button:hover {
+    div[data-testid="stHorizontalBlock"] div:nth-child(2) div.stButton > button:not(:disabled):hover {
         box-shadow: 0 4px 16px rgba(239,68,68,0.4) !important;
     }
     </style>
-    """, unsafe_allow_html=True)
+    """), unsafe_allow_html=True)
 
     hitl_col1, hitl_col2, _ = st.columns([1, 1, 2])
 
     with hitl_col1:
-        if st.button("✅  Approve", use_container_width=True, key="hitl_approve"):
+        if st.button("Approve", use_container_width=True, key="hitl_approve"):
             with st.spinner("Resuming with approval…"):
                 _resume_hitl("approve")
             st.rerun()
 
     with hitl_col2:
-        if st.button("❌  Reject", use_container_width=True, key="hitl_reject"):
+        if st.button("Reject", use_container_width=True, key="hitl_reject"):
             with st.spinner("Resuming with rejection…"):
                 _resume_hitl("reject")
             st.rerun()
@@ -688,8 +816,6 @@ if st.session_state.hitl_resolved:
 # Footer
 # ---------------------------------------------------------------------------
 
-st.markdown("""
-<div style="text-align: center; padding: 3rem 0 1rem; color: #334155; font-size: 0.75rem;">
-    Boardroom Agent • Built with Google ADK & Streamlit
-</div>
-""", unsafe_allow_html=True)
+st.markdown("""<div style="text-align: center; padding: 3rem 0 1rem; color: #334155; font-size: 0.75rem;">
+Boardroom Agent • Built with Google ADK & Streamlit
+</div>""", unsafe_allow_html=True)

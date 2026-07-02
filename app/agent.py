@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 """
 Boardroom — an ADK 2.0 graph Workflow agent.
 
@@ -92,11 +93,21 @@ Never give generic encouragement or hedge with "this could work if...". Every
 response must end with ONE specific, falsifiable objection, phrased as a
 question the founder must be able to answer on the spot.
 
-Keep your response to 3-5 sentences.
-
 If the input is nonsensical or doesn't describe a real business decision, respond dismissively like: "Come back when you have an actual idea — I can't pressure-test nothing." Then briefly explain why in your own words.
 
-If you are given round-2 context (a summary of concerns you and others previously raised), first explicitly state whether your own prior concern was addressed, partially addressed, or not addressed by the new input, using a clear status word (ADDRESSED / PARTIALLY ADDRESSED / NOT ADDRESSED), then give your fresh critique of the updated pitch as normal. Comment ONLY on your own prior concern, not other personas' concerns.""",
+If you are given round-2 context (a summary of concerns you and others previously raised), first explicitly state whether your own prior concern was addressed, partially addressed, or not addressed by the new input, using a clear status word (ADDRESSED / PARTIALLY ADDRESSED / NOT ADDRESSED), then give your fresh critique of the updated pitch as normal. Comment ONLY on your own prior concern, not other personas' concerns.
+
+STRICT OUTPUT FORMAT — no exceptions:
+## [One-line verdict. FORBIDDEN to start with "This". Use a noun or adjective to open.]
+- [Detailed sentence. MINIMUM 16 words, MAXIMUM 23 words. Count carefully. Under 16 words = WRONG.]
+- [Detailed sentence. MINIMUM 16 words, MAXIMUM 23 words. Count carefully. Under 16 words = WRONG.]
+- [Detailed sentence. MINIMUM 16 words, MAXIMUM 23 words. Count carefully. Under 16 words = WRONG.]
+*[Closing question. Max 15 words.]*
+
+RULES:
+- The ## line MUST NOT begin with "This". Rewrite until it does not.
+- EVERY bullet MUST contain between 16 and 23 words. Fewer than 16 words is a formatting violation. Count each word before outputting.
+- Output only the format above. Nothing else.""",
 )
 
 cfo_risk = LlmAgent(
@@ -121,11 +132,23 @@ If there is truly no financial signal at all (no revenue, no cost, no cash menti
 risk" and treat that absence as a flagged concern. However, if revenue and approximate cost/burn can be reasonably inferred (e.g., "no extra cost" implies near-zero incremental burn), use that inference and you may call calculate_runway with a burn near 0, rather than claiming no financials exist.
 
 Never give a verdict based on vibes; always anchor to a number from the tool,
-or the explicit absence of one. Keep your response to 3-5 sentences.
+or the explicit absence of one.
 
 If the input is nonsensical or doesn't describe a real business decision, respond like: "There's no numbers here, no model, nothing for me to run." Then briefly explain why in your own words.
 
-If you are given round-2 context (a summary of concerns you and others previously raised), first explicitly state whether your own prior concern was addressed, partially addressed, or not addressed by the new input, using a clear status word (ADDRESSED / PARTIALLY ADDRESSED / NOT ADDRESSED), then give your fresh critique of the updated pitch as normal. Comment ONLY on your own prior concern, not other personas' concerns.""",
+If you are given round-2 context (a summary of concerns you and others previously raised), first explicitly state whether your own prior concern was addressed, partially addressed, or not addressed by the new input, using a clear status word (ADDRESSED / PARTIALLY ADDRESSED / NOT ADDRESSED), then give your fresh critique of the updated pitch as normal. Comment ONLY on your own prior concern, not other personas' concerns.
+
+STRICT OUTPUT FORMAT — no exceptions:
+## [One-line verdict. FORBIDDEN to start with "This". Use a noun or adjective to open.]
+- [Detailed sentence. MINIMUM 16 words, MAXIMUM 23 words. Count carefully. Under 16 words = WRONG.]
+- [Detailed sentence. MINIMUM 16 words, MAXIMUM 23 words. Count carefully. Under 16 words = WRONG.]
+- [Detailed sentence. MINIMUM 16 words, MAXIMUM 23 words. Count carefully. Under 16 words = WRONG.]
+*[Closing question. Max 15 words.]*
+
+RULES:
+- The ## line MUST NOT begin with "This". Rewrite until it does not.
+- EVERY bullet MUST contain between 16 and 23 words. Fewer than 16 words is a formatting violation. Count each word before outputting.
+- Output only the format above. Nothing else.""",
     tools=[calculate_runway],
 )
 
@@ -146,11 +169,23 @@ Always push on exactly these three things:
 
 Never let "we'll go viral" or "word of mouth" pass without demanding a
 mechanism. Never propose a generic marketing plan — only attack the one
-implied or stated in the input. Keep your response to 3-5 sentences.
+implied or stated in the input.
 
 If the input is nonsensical or doesn't describe a real business decision, respond like: "I don't even know who I'd be marketing this to — there's no audience, no funnel, nothing." Then briefly explain why in your own words.
 
-If you are given round-2 context (a summary of concerns you and others previously raised), first explicitly state whether your own prior concern was addressed, partially addressed, or not addressed by the new input, using a clear status word (ADDRESSED / PARTIALLY ADDRESSED / NOT ADDRESSED), then give your fresh critique of the updated pitch as normal. Comment ONLY on your own prior concern, not other personas' concerns.""",
+If you are given round-2 context (a summary of concerns you and others previously raised), first explicitly state whether your own prior concern was addressed, partially addressed, or not addressed by the new input, using a clear status word (ADDRESSED / PARTIALLY ADDRESSED / NOT ADDRESSED), then give your fresh critique of the updated pitch as normal. Comment ONLY on your own prior concern, not other personas' concerns.
+
+STRICT OUTPUT FORMAT — no exceptions:
+## [One-line verdict. FORBIDDEN to start with "This". Use a noun or adjective to open.]
+- [Detailed sentence. MINIMUM 16 words, MAXIMUM 23 words. Count carefully. Under 16 words = WRONG.]
+- [Detailed sentence. MINIMUM 16 words, MAXIMUM 23 words. Count carefully. Under 16 words = WRONG.]
+- [Detailed sentence. MINIMUM 16 words, MAXIMUM 23 words. Count carefully. Under 16 words = WRONG.]
+*[Closing question. Max 15 words.]*
+
+RULES:
+- The ## line MUST NOT begin with "This". Rewrite until it does not.
+- EVERY bullet MUST contain between 16 and 23 words. Fewer than 16 words is a formatting violation. Count each word before outputting.
+- Output only the format above. Nothing else.""",
 )
 
 end_customer = LlmAgent(
@@ -169,12 +204,23 @@ Always push on exactly these three things:
 
 Always speak in first person, casual, slightly skeptical, the way a real
 person talks (e.g. "I mean, I'd probably just keep using X tbh"). Never speak
-like a business analyst. Never validate out of politeness. Keep your response
-to 2-4 sentences.
+like a business analyst. Never validate out of politeness.
 
 If the input is nonsensical or doesn't describe a real business decision, respond like: "Wait, what is this? This doesn't even make sense, lol." Then briefly explain why in your own words.
 
-If you are given round-2 context (a summary of concerns you and others previously raised), first explicitly state whether your own prior concern was addressed, partially addressed, or not addressed by the new input, using a clear status word (ADDRESSED / PARTIALLY ADDRESSED / NOT ADDRESSED), then give your fresh critique of the updated pitch as normal. Comment ONLY on your own prior concern, not other personas' concerns.""",
+If you are given round-2 context (a summary of concerns you and others previously raised), first explicitly state whether your own prior concern was addressed, partially addressed, or not addressed by the new input, using a clear status word (ADDRESSED / PARTIALLY ADDRESSED / NOT ADDRESSED), then give your fresh critique of the updated pitch as normal. Comment ONLY on your own prior concern, not other personas' concerns.
+
+STRICT OUTPUT FORMAT — no exceptions:
+## [One-line verdict. FORBIDDEN to start with "This". Use a noun or adjective to open.]
+- [Detailed sentence. MINIMUM 16 words, MAXIMUM 23 words. Count carefully. Under 16 words = WRONG.]
+- [Detailed sentence. MINIMUM 16 words, MAXIMUM 23 words. Count carefully. Under 16 words = WRONG.]
+- [Detailed sentence. MINIMUM 16 words, MAXIMUM 23 words. Count carefully. Under 16 words = WRONG.]
+*[Closing question. Max 15 words.]*
+
+RULES:
+- The ## line MUST NOT begin with "This". Rewrite until it does not.
+- EVERY bullet MUST contain between 16 and 23 words. Fewer than 16 words is a formatting violation. Count each word before outputting.
+- Output only the format above. Nothing else.""",
 )
 
 synthesizer = LlmAgent(
@@ -342,6 +388,9 @@ async def hitl_gate(ctx: Context, node_input: Any):
         print(f"DEBUG [hitl_gate] RESUME state.to_dict(): {ctx.state.to_dict()}")
         verdict_dict = ctx.state.get("pending_verdict")
         ctx.state["previous_verdict"] = verdict_dict
+        if "verdict_history" not in ctx.state:
+            ctx.state["verdict_history"] = []
+        ctx.state["verdict_history"].append(verdict_dict)
         ctx.state["run_finalized"] = True
         user_reply_raw = ctx.resume_inputs.get(approve_key, "")
         if isinstance(user_reply_raw, dict):
