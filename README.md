@@ -81,6 +81,10 @@ gcloud config set project <your-project-id>
 agents-cli deploy
 ```
 
+##** Output**
+<img width="1365" height="654" alt="boardroom12" src="https://github.com/user-attachments/assets/15d24f80-63b0-49b7-8eb6-b2beaf487043" />
+
+
 To add CI/CD and Terraform, run `agents-cli scaffold enhance`.
 To set up your production infrastructure, run `agents-cli infra cicd`.
 
