@@ -81,7 +81,12 @@ gcloud config set project <your-project-id>
 agents-cli deploy
 ```
 
-## Output
+## Output Video and Images
+
+https://github.com/user-attachments/assets/a73e81a7-4183-49c5-9bfa-106824a0ed9b
+
+
+
 <img width="1354" height="658" alt="boardroom1" src="https://github.com/user-attachments/assets/3818779e-1a16-4927-b177-1b471e66bce5" />
 
 <img width="1350" height="543" alt="boardroom2" src="https://github.com/user-attachments/assets/c74108f1-b50a-4641-a503-1476fd3d7dc3" />
